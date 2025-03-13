@@ -1,4 +1,4 @@
 package app.krypto;
 
-public class main {
+public class Cipher {
 }
