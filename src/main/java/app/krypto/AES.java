@@ -59,8 +59,37 @@ public class AES {
     }
 
     byte[] shiftRows(byte[] state){
-        byte[] shiftedState = new byte[16];
+        for(int i=1; i<4; i++){
+            byte[] tempRow = new byte[4];
+            for(int j=0; j<4; j++){
+                tempRow[j] = state[i +4 * j];
+            }
 
+            for(int j=0; j<4; j++){
+                state[i + 4 * j] = tempRow[(j + i) % 4];
+            }
+        }
+        return state;
+    }
+
+    byte[] addRoundKey(byte[] state, byte[] roundKey){
+        for(int i=0; i<16; i++){
+            state[i] ^= roundKey[i];
+        }
+        return state;
+    }
+
+    byte[] reverceShiftRows(byte[] state){
+        for(int i=1; i<4; i++){
+            byte[] tempRow = new byte[4];
+            for(int j=0; j<4; j++){
+                tempRow[j] = state[i +4 * j];
+            }
+
+            for(int j=0; j<4; j++){
+                state[i + 4 * j] = tempRow[(j - i + 4) % 4];
+            }
+        }
         return state;
     }
 
