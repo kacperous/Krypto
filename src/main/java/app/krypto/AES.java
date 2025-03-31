@@ -79,13 +79,74 @@ public class AES {
         return state;
     }
 
+    byte multiply(byte a, byte b){ //funkcja pomocnicza do mixColumn działająca na ciele GF(2^8) czyli Galois-a
+        byte result = 0; //ustawiam wynik na 0 bo tak
+        for(int i=0; i<8; i++){ //iteruje po kazdej pozycji bajtu( bajt = 8 bitów)
+            if((b & 1) == 1){ //sprawdzamy czy najmniej znaczacy bit to 1, (najmniej znaczący to ostani)
+                result ^= a; //jezeli tak to dodajmy do wyniku (ale w ciele Galois-a dodanie to xor)
+            }
+            boolean mostSignificantBit = (a & 0x80) != 0; //sprawdzamy czy najbardziej znaczacy bit to 1
+            a <<= 1; //przesuwamy a w lewo o 1
+
+            // ale jeśli MSB było 1, musimy "zredukować" wynik, bo w AES działamy modułem
+            // wielomianu 0x1B. To jakby "naprawianie" liczby, żeby była w poprawnym zakresie.
+            if(mostSignificantBit){
+                a ^= 0x1B; // dodajemy wielomian 0x1B w procesie redukcji
+            }
+            b >>= 1; //przesuwamy b w prawo o 1 (pozbywamy sie juz przeanalizowanego ostatniego bitu)
+        }
+        return result;
+    }
+
     byte[] mixColumns(byte[] state){
-        for(int i=0; i<4; i++){
-            int base = i * 4;
+        for(int i=0; i<4; i++){ //iterujemy przez 4 kolumny macierzy stanu
+            int base = i * 4; //obliczamy indeks pierwszego bajtu w danej kolumnie.
+            // dla pierwszej kolumny będzie to 0. Dla drugiej: 4. Trzeciej: 8. Czwartej: 12.
 
+            //bierzemy 4 bajty z kolumny
+            byte c0 = state[base];
+            byte c1 = state[base + 1];
+            byte c2 = state[base + 2];
+            byte c3 = state[base + 3];
 
+            //obliczamy nowe bajty w kolumnie, macierz jaka wybrliśmy to [02,03,01,01]
+            byte n0 = (byte) (multiply((byte) 0x02, c0) ^ multiply((byte) 0x03, c1) ^ c2 ^ c3);
+            byte n1 = (byte) (c0 ^ multiply((byte) 0x02, c1) ^ multiply((byte) 0x03, c2) ^ c3);
+            byte n2 = (byte) (c0 ^ c1 ^ multiply((byte) 0x02, c2) ^ multiply((byte) 0x03, c3));
+            byte n3 = (byte) (multiply((byte) 0x03, c0) ^ c1 ^ c2 ^ multiply((byte) 0x02, c3));
+
+            //zapisujemy nowe bajty w kolumnie
+            state[base] = n0;
+            state[base + 1] = n1;
+            state[base + 2] = n2;
+            state[base + 3] = n3;
         }
         return state;
+    }
+
+    byte[] reverseMixColumns(byte[] state) {
+        for (int i = 0; i < 4; i++) { // Dla każdej z 4 kolumn
+            int base = i * 4; // Indeks pierwszego bajtu w kolumnie (0, 4, 8, 12)
+
+            // Pobieramy 4 bajty z kolumny
+            byte c0 = state[base];
+            byte c1 = state[base + 1];
+            byte c2 = state[base + 2];
+            byte c3 = state[base + 3];
+
+            // Obliczamy nowe bajty dla kolumny (macierz [0E, 0B, 0D, 09])
+            byte n0 = (byte) (multiply((byte) 0x0E, c0) ^ multiply((byte) 0x0B, c1) ^ multiply((byte) 0x0D, c2) ^ multiply((byte) 0x09, c3));
+            byte n1 = (byte) (multiply((byte) 0x09, c0) ^ multiply((byte) 0x0E, c1) ^ multiply((byte) 0x0B, c2) ^ multiply((byte) 0x0D, c3));
+            byte n2 = (byte) (multiply((byte) 0x0D, c0) ^ multiply((byte) 0x09, c1) ^ multiply((byte) 0x0E, c2) ^ multiply((byte) 0x0B, c3));
+            byte n3 = (byte) (multiply((byte) 0x0B, c0) ^ multiply((byte) 0x0D, c1) ^ multiply((byte) 0x09, c2) ^ multiply((byte) 0x0E, c3));
+
+            // Przypisujemy nowe bajty do stanu
+            state[base] = n0;
+            state[base + 1] = n1;
+            state[base + 2] = n2;
+            state[base + 3] = n3;
+        }
+        return state; // Zwracamy zaktualizowany stan
     }
 
     byte[] reverceShiftRows(byte[] state){
