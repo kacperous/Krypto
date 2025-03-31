@@ -149,6 +149,7 @@ public class AES {
         return state; // Zwracamy zaktualizowany stan
     }
 
+
     byte[] reverceShiftRows(byte[] state){
         for(int i=1; i<4; i++){
             byte[] tempRow = new byte[4];
