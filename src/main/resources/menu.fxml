@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Button layoutX="155.0" layoutY="162.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="82.0" text="AES" AnchorPane.bottomAnchor="187.2" AnchorPane.leftAnchor="155.20000000000002" AnchorPane.rightAnchor="362.6" AnchorPane.topAnchor="162.0" />
+      <Button layoutX="371.0" layoutY="162.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="82.0" text="RSA" AnchorPane.bottomAnchor="187.6" AnchorPane.rightAnchor="146.59999999999997" AnchorPane.topAnchor="162.0" />
+      <Label layoutX="163.0" layoutY="67.0" text="Wybierz algorytm">
+         <font>
+            <Font size="35.0" />
+         </font>
+      </Label>
+   </children>
+</AnchorPane>
