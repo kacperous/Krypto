@@ -79,6 +79,15 @@ public class AES {
         return state;
     }
 
+    byte[] mixColumns(byte[] state){
+        for(int i=0; i<4; i++){
+            int base = i * 4;
+
+
+        }
+        return state;
+    }
+
     byte[] reverceShiftRows(byte[] state){
         for(int i=1; i<4; i++){
             byte[] tempRow = new byte[4];
