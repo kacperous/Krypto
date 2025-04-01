@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.krypto.MainController">
     <children>
         <HBox alignment="CENTER" prefHeight="27.0" prefWidth="600.0" AnchorPane.bottomAnchor="373.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
@@ -31,20 +31,20 @@
         </HBox>
         <HBox alignment="CENTER" layoutY="27.0" prefHeight="35.0" prefWidth="600.0" AnchorPane.bottomAnchor="346.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="27.0">
             <children>
-                <TextField id="KeyValue1">
+                <TextField fx:id="keyValue1">
                     <HBox.margin>
                         <Insets right="30.0" />
                     </HBox.margin>
                 </TextField>
-                <TextField id="KeyValue2">
+                <TextField fx:id="keyValue2">
                     <HBox.margin>
                         <Insets right="30.0" />
                     </HBox.margin>
                 </TextField>
-                <TextField id="KeyValue3" />
+                <TextField fx:id="keyValue3" />
             </children>
         </HBox>
-        <Button id="GenerateKeys" layoutX="253.0" layoutY="66.0" mnemonicParsing="false" text="Generuj klucze" AnchorPane.bottomAnchor="309.0" AnchorPane.leftAnchor="253.0" AnchorPane.rightAnchor="253.0" AnchorPane.topAnchor="66.0" />
+        <Button fx:id="generateKeys" layoutX="253.0" layoutY="66.0" mnemonicParsing="false" text="Generuj klucze" AnchorPane.bottomAnchor="309.0" AnchorPane.leftAnchor="253.0" AnchorPane.rightAnchor="253.0" AnchorPane.topAnchor="66.0" onAction="#generateKeysAction"/>
         <HBox layoutY="117.0" prefHeight="286.0" prefWidth="600.0">
             <children>
                 <VBox prefHeight="286.0" prefWidth="224.0">
@@ -54,7 +54,7 @@
                                 <Insets left="15.0" />
                             </VBox.margin>
                         </Label>
-                        <TextArea prefHeight="193.0" prefWidth="209.0" promptText="Tu podaj tekst">
+                        <TextArea fx:id="inputTextArea" prefHeight="193.0" prefWidth="209.0" promptText="Tu podaj tekst">
                             <VBox.margin>
                                 <Insets left="10.0" top="5.0" />
                             </VBox.margin>
@@ -62,7 +62,7 @@
                         <HBox alignment="CENTER" prefHeight="20.0" prefWidth="197.0">
                             <children>
                                 <Label text="Otwórz plik" />
-                                <Button id="OpenFile" mnemonicParsing="false" text="Otwórz">
+                                <Button fx:id="openFile" mnemonicParsing="false" text="Otwórz" onAction="#openFileAction">
                                     <HBox.margin>
                                         <Insets left="10.0" />
                                     </HBox.margin>
@@ -75,7 +75,7 @@
                         <HBox alignment="CENTER" prefHeight="24.0" prefWidth="197.0">
                             <children>
                                 <Label text="Zapisz plik " />
-                                <Button id="SaveFile" mnemonicParsing="false" text="Zapisz">
+                                <Button fx:id="saveFile" mnemonicParsing="false" text="Zapisz" onAction="#saveFileAction">
                                     <HBox.margin>
                                         <Insets left="10.0" />
                                     </HBox.margin>
@@ -89,21 +89,21 @@
                 </VBox>
                 <VBox alignment="TOP_CENTER" prefHeight="286.0" prefWidth="148.0">
                     <children>
-                        <Button id="Encrypt" mnemonicParsing="false" prefHeight="25.0" prefWidth="80.0" text="Szyfruj-&gt;" />
-                        <Button id="Decrypt" mnemonicParsing="false" text="&lt;-Deszyfruj">
+                        <Button fx:id="encrypt" mnemonicParsing="false" prefHeight="25.0" prefWidth="80.0" text="Szyfruj-&gt;" onAction="#encryptAction"/>
+                        <Button fx:id="decrypt" mnemonicParsing="false" text="&lt;-Deszyfruj" onAction="#decryptAction">
                             <VBox.margin>
                                 <Insets top="5.0" />
                             </VBox.margin>
                         </Button>
-                        <RadioButton id="WindowRadio" mnemonicParsing="false" text="Okno">
+                        <RadioButton fx:id="windowRadio" mnemonicParsing="false" text="Okno">
                             <VBox.margin>
                                 <Insets top="20.0" />
                             </VBox.margin>
                             <toggleGroup>
-                                <ToggleGroup fx:id="Radio" />
+                                <ToggleGroup fx:id="radio" />
                             </toggleGroup>
                         </RadioButton>
-                        <RadioButton id="FilerRadio" mnemonicParsing="false" text="Plik" toggleGroup="$Radio">
+                        <RadioButton fx:id="fileRadio" mnemonicParsing="false" text="Plik" toggleGroup="$Radio" onAction="#radioModeAction">
                             <VBox.margin>
                                 <Insets top="5.0" />
                             </VBox.margin>
@@ -117,7 +117,7 @@
                                 <Insets left="15.0" />
                             </VBox.margin>
                         </Label>
-                        <TextArea prefHeight="193.0" prefWidth="226.0" promptText="Tu podaj szyfrogram">
+                        <TextArea fx:id="outputTextArea" prefHeight="193.0" prefWidth="226.0" promptText="Tu podaj szyfrogram">
                             <VBox.margin>
                                 <Insets left="10.0" top="5.0" />
                             </VBox.margin>
@@ -125,7 +125,7 @@
                         <HBox alignment="CENTER" prefHeight="20.0" prefWidth="197.0">
                             <children>
                                 <Label text="Otwórz plik z szyfrowaniem" />
-                                <Button id="OpenFileEncrypted" mnemonicParsing="false" text="Otwórz">
+                                <Button fx:id="openFileEncrypted" mnemonicParsing="false" text="Otwórz" onAction="#openFileEncryptedAction">
                                     <HBox.margin>
                                         <Insets left="10.0" />
                                     </HBox.margin>
@@ -138,7 +138,7 @@
                         <HBox alignment="CENTER" prefHeight="24.0" prefWidth="197.0">
                             <children>
                                 <Label text="Zapisz plik z szyfrowaniem " />
-                                <Button id="SaveFileEncrypted" mnemonicParsing="false" text="Zapisz">
+                                <Button fx:id="saveFileEncrypted" mnemonicParsing="false" text="Zapisz" onAction="#saveFileEncryptedAction">
                                     <HBox.margin>
                                         <Insets left="10.0" />
                                     </HBox.margin>
