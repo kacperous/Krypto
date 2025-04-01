@@ -1,7 +1,7 @@
 package app.krypto;
 
 public class AES {
-    static int[] sbox = { 0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F,
+    public static int[] sbox = { 0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F,
             0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82,
             0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C,
             0xA4, 0x72, 0xC0, 0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC,
@@ -50,6 +50,41 @@ public class AES {
             0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53,
             0x99, 0x61, 0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1,
             0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D };
+
+    public byte[] aesEncrypt(byte[] input, byte[] extendedKey){
+        byte[] state = new byte[16];
+        System.arraycopy(input, 0, state, 0, input.length); //kopiujemy bajty z input do stanu
+
+        int rounds = 10; //liczba rund
+        int round = 0; //numer aktualnej rundy
+
+        //dodajemy klucz początkowy
+        addRoundKey(state, getRoundKey(extendedKey, round));
+
+        for(round = 1; round < rounds; round++){
+            //substitucja bajtów
+            substituteBytes(state);
+            //przesunięcie wierszy
+            shiftRows(state);
+            //mieszanie kolumn
+            mixColumns(state);
+            //dodanie klucza rundy
+            addRoundKey(state, getRoundKey(extendedKey, round));
+        }
+
+        //ostatnia runda
+        substituteBytes(state);
+        shiftRows(state);
+        addRoundKey(state, getRoundKey(extendedKey, round));
+
+        return state; //zwracamy zaszyfrowany stan
+    }
+
+    byte[] getRoundKey(byte[] extendedKey, int round){
+        byte[] roundKey = new byte[16];
+        System.arraycopy(extendedKey, round * 16, roundKey, 0, 16); //kopiujemy bajty z rozszerzonego klucza do klucza rundy
+        return roundKey;
+    }
 
     byte[] substituteBytes(byte[] state){
         for(int i = 0; i < state.length; i++){
@@ -123,6 +158,8 @@ public class AES {
         }
         return state;
     }
+
+
 
     byte[] reverseMixColumns(byte[] state) {
         for (int i = 0; i < 4; i++) { // Dla każdej z 4 kolumn
