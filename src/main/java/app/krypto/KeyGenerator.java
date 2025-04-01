@@ -65,14 +65,4 @@ public class KeyGenerator {
             (byte) 0x10, (byte) 0x20, (byte) 0x40, (byte) 0x80,
             (byte) 0x1B, (byte) 0x36
     };
-
-    void printExpandedKey(byte[] expandedKey) {
-        for (int i = 0; i < expandedKey.length; i++) {
-            if (i % 16 == 0) {
-                System.out.println();
-            }
-            System.out.printf("%02x ", expandedKey[i]);
-        }
-        System.out.println();
-    }
 }
