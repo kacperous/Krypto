@@ -54,16 +54,27 @@ public class AES {
             0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D };
 
     public byte[] aesEncrypt(byte[] input, byte[] extendedKey){
+        int blockSize = 16; // Rozmiar bloku
+        int inputLength = input.length;
+        byte[] output = new byte[inputLength];
+
+        // Przetwarzamy każdy blok po kolei
+        for (int offset = 0; offset < inputLength; offset += blockSize) {
+            byte[] block = Arrays.copyOfRange(input, offset, Math.min(offset + blockSize, inputLength));
+            byte[] encryptedBlock = encryptBlock(block, extendedKey);
+            System.arraycopy(encryptedBlock, 0, output, offset, blockSize);
+        }
+        return output;
+    }
+
+    byte[] encryptBlock(byte[] block, byte[] extendedKey){
         byte[] state = new byte[16];
-        System.arraycopy(input, 0, state, 0, input.length); //kopiujemy bajty z input do stanu
+        System.arraycopy(block, 0, state, 0, block.length); //kopiujemy bajty z input do stanu
 
-        int rounds = 10; //liczba rund
-        int round = 0; //numer aktualnej rundy
+        int rounds = 10;
+        addRoundKey(state, getRoundKey(extendedKey, 0));
 
-        //dodajemy klucz początkowy
-        addRoundKey(state, getRoundKey(extendedKey, round));
-
-        for(round = 1; round < rounds; round++){
+        for (int round = 1; round < rounds; round++) {
             //substitucja bajtów
             substituteBytes(state);
             //przesunięcie wierszy
@@ -74,15 +85,28 @@ public class AES {
             addRoundKey(state, getRoundKey(extendedKey, round));
         }
 
-        //ostatnia runda
         substituteBytes(state);
         shiftRows(state);
-        addRoundKey(state, getRoundKey(extendedKey, round));
+        addRoundKey(state, getRoundKey(extendedKey, rounds));
 
-        return state; //zwracamy zaszyfrowany stan
+        return state;
     }
 
     public byte[] aesDecrypt(byte[] input, byte[] extendedKey){
+        int blockSize = 16; // Rozmiar bloku
+        int inputLength = input.length;
+        byte[] output = new byte[inputLength];
+
+        // Przetwarzamy każdy blok po kolei
+        for (int offset = 0; offset < inputLength; offset += blockSize) {
+            byte[] block = Arrays.copyOfRange(input, offset, Math.min(offset + blockSize, inputLength));
+            byte[] decryptedBlock = decryptBlock(block, extendedKey);
+            System.arraycopy(decryptedBlock, 0, output, offset, blockSize);
+        }
+        return output;
+    }
+
+    byte[] decryptBlock(byte[] input, byte[] extendedKey){
         byte[] state = new byte[16];
         System.arraycopy(input, 0, state, 0, input.length); //kopiujemy bajty z input do stanu
 
