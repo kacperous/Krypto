@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Base64;
 
 public class MainController {
     @FXML
@@ -49,10 +51,17 @@ public class MainController {
     private byte[] expandedKey;
     private boolean isFileMode = false;
 
+    // Zmienne do przechowywania danych binarnych
+    private byte[] inputFileBytes = null;
+    private byte[] outputFileBytes = null;
+    private boolean isInputBinary = false;
+    private boolean isOutputBinary = false;
+    private String lastInputFileName = "";
+    private String lastOutputFileName = "";
+
     @FXML
     public void initialize() {
         windowRadio.setSelected(true);
-        // Dodatkowa inicjalizacja jeśli potrzebna
     }
 
     @FXML
@@ -60,7 +69,6 @@ public class MainController {
         byte[] key = keyGenerator.generateKey();
         expandedKey = keyGenerator.keyExpansion(key);
 
-        // Wypełnianie pól z wartościami klucza w formie hex
         StringBuilder key1 = new StringBuilder();
         StringBuilder key2 = new StringBuilder();
         StringBuilder key3 = new StringBuilder();
@@ -87,18 +95,33 @@ public class MainController {
             return;
         }
 
-        String input = inputTextArea.getText();
-        if (input.isEmpty()) {
-            outputTextArea.setText("Wprowadź tekst do zaszyfrowania");
-            return;
+        byte[] dataToEncrypt;
+
+        // Sprawdź czy pracujemy z danymi binarnymi
+        if (isInputBinary && inputFileBytes != null) {
+            dataToEncrypt = inputFileBytes;
+        } else {
+            // Pobierz tekst z pola tekstowego
+            String inputText = inputTextArea.getText();
+            dataToEncrypt = inputText.getBytes(StandardCharsets.UTF_8);
         }
 
-        byte[] encryptedBytes = Utils.encryptUserInput(input, aes, expandedKey);
+        // Przygotuj dane do szyfrowania (dodaj padding)
+        byte[] paddedData = Utils.padBlock(dataToEncrypt);
 
-        // Wyświetl wynik jako tekst hex
+        // Zaszyfruj dane
+        byte[] encryptedBytes = aes.aesEncrypt(paddedData, expandedKey);
+
+        // Zachowaj zaszyfrowane dane do późniejszego zapisu
+        outputFileBytes = encryptedBytes;
+        isOutputBinary = true;
+
+        // Zachowaj informację o nazwie pliku
+        lastOutputFileName = lastInputFileName;
+
         StringBuilder hexOutput = new StringBuilder();
         for (byte b : encryptedBytes) {
-            hexOutput.append(String.format("%02X ", b));
+            hexOutput.append(String.format("%02X ", b & 0xFF));
         }
         outputTextArea.setText(hexOutput.toString());
     }
@@ -110,21 +133,83 @@ public class MainController {
             return;
         }
 
-        String hexText = outputTextArea.getText().replaceAll("\\s+", "");
-        if (hexText.isEmpty()) {
-            inputTextArea.setText("Wprowadź zaszyfrowany tekst");
-            return;
+        byte[] dataToDecrypt;
+
+        // Sprawdź czy mamy dane binarne do odszyfrowania
+        if (isOutputBinary && outputFileBytes != null) {
+            dataToDecrypt = outputFileBytes;
+        } else {
+            // Próbuj przekonwertować hex na bajty
+            String hexText = outputTextArea.getText().replaceAll("\\s+", "");
+            if (hexText.startsWith("[ZASZYFROWANY") || hexText.startsWith("[ZASZYFROWANE")) {
+                inputTextArea.setText("Użyj przycisku 'Otwórz' aby wczytać plik zaszyfrowany");
+                return;
+            }
+
+            try {
+                dataToDecrypt = new byte[hexText.length() / 2];
+                for (int i = 0; i < dataToDecrypt.length; i++) {
+                    dataToDecrypt[i] = (byte) Integer.parseInt(
+                            hexText.substring(i * 2, (i * 2) + 2), 16);
+                }
+            } catch (Exception e) {
+                inputTextArea.setText("Błąd podczas parsowania danych hex: " + e.getMessage());
+                return;
+            }
         }
 
-        // Konwersja hex na bajty
-        byte[] encryptedBytes = new byte[hexText.length() / 2];
-        for (int i = 0; i < encryptedBytes.length; i++) {
-            int index = i * 2;
-            encryptedBytes[i] = (byte) Integer.parseInt(hexText.substring(index, index + 2), 16);
+        // Odszyfruj dane
+        byte[] decryptedData = aes.aesDecrypt(dataToDecrypt, expandedKey);
+
+        try {
+            // Usuń padding
+            byte[] unpaddedData = Utils.removePadding(decryptedData);
+
+            // Sprawdź czy dane są binarne
+            boolean looksLikeBinary = isBinaryContent(unpaddedData);
+
+            // Zachowaj odszyfrowane dane
+            inputFileBytes = unpaddedData;
+            isInputBinary = looksLikeBinary;
+            lastInputFileName = lastOutputFileName;
+
+            if (looksLikeBinary) {
+                // Pokaż informację o pliku binarnym
+                inputTextArea.setText("[ODSZYFROWANY PLIK BINARNY]" +
+                        (lastOutputFileName.isEmpty() ? "" : " - " + lastOutputFileName) +
+                        "\nRozmiar: " + unpaddedData.length + " bajtów" +
+                        "\nUżyj przycisku 'Zapisz' aby zapisać plik.");
+            } else {
+                // Pokaż jako tekst jeśli nie wygląda na binarne dane
+                String decryptedText = new String(unpaddedData, StandardCharsets.UTF_8);
+                inputTextArea.setText(decryptedText);
+                isInputBinary = false;
+            }
+        } catch (Exception e) {
+            inputTextArea.setText("Błąd podczas deszyfrowania: " + e.getMessage());
+        }
+    }
+
+    // Pomocnicza metoda do wykrywania zawartości binarnej
+    private boolean isBinaryContent(byte[] data) {
+        // Zakładamy, że pliki PDF zawsze zaczynają się od %PDF
+        if (data.length >= 4 &&
+                data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F') {
+            return true;
         }
 
-        String decryptedData = Utils.decryptUserInput(encryptedBytes, aes, expandedKey);
-        inputTextArea.setText(decryptedData);
+        // Sprawdzamy czy dane wyglądają na binarne
+        int binaryCount = 0;
+        int sampleSize = Math.min(100, data.length);
+
+        for (int i = 0; i < sampleSize; i++) {
+            byte b = data[i];
+            if (b == 0 || (b > 0 && b < 9) || (b > 14 && b < 32 && b != 10 && b != 13)) {
+                binaryCount++;
+            }
+        }
+
+        return binaryCount > (sampleSize * 0.1);
     }
 
     @FXML
@@ -138,9 +223,24 @@ public class MainController {
         if (file != null) {
             try {
                 byte[] content = Files.readAllBytes(file.toPath());
-                inputTextArea.setText(new String(content, StandardCharsets.UTF_8));
+
+                // Sprawdź czy zawartość wygląda na binarną
+                isInputBinary = isBinaryContent(content);
+                inputFileBytes = content;
+                lastInputFileName = file.getName();
+
+                if (isInputBinary) {
+                    // Pokaż informację o pliku binarnym
+                    inputTextArea.setText("[PLIK BINARNY] " + file.getName() +
+                            "\nRozmiar: " + content.length + " bajtów" +
+                            "\nPlik zostanie zaszyfrowany jako dane binarne.");
+                } else {
+                    // Pokaż jako tekst, jeśli nie jest binarny
+                    String text = new String(content, StandardCharsets.UTF_8);
+                    inputTextArea.setText(text);
+                }
             } catch (IOException e) {
-                inputTextArea.setText("Błąd odczytu pliku: " + e.getMessage());
+                inputTextArea.setText("Błąd podczas wczytywania pliku: " + e.getMessage());
             }
         }
     }
@@ -150,9 +250,20 @@ public class MainController {
         File file = saveFile("Zapisz plik");
         if (file != null) {
             try {
-                Files.write(file.toPath(), inputTextArea.getText().getBytes(StandardCharsets.UTF_8));
+                byte[] dataToSave;
+
+                if (isInputBinary && inputFileBytes != null) {
+                    // Zapisz dane binarne bez modyfikacji
+                    dataToSave = inputFileBytes;
+                } else {
+                    // Zapisz tekst
+                    dataToSave = inputTextArea.getText().getBytes(StandardCharsets.UTF_8);
+                }
+
+                Files.write(file.toPath(), dataToSave);
+                inputTextArea.setText("Plik został zapisany: " + file.getAbsolutePath());
             } catch (IOException e) {
-                inputTextArea.setText("Błąd zapisu pliku: " + e.getMessage());
+                inputTextArea.setText("Błąd podczas zapisywania pliku: " + e.getMessage());
             }
         }
     }
@@ -163,13 +274,17 @@ public class MainController {
         if (file != null) {
             try {
                 byte[] content = Files.readAllBytes(file.toPath());
-                StringBuilder hexOutput = new StringBuilder();
-                for (byte b : content) {
-                    hexOutput.append(String.format("%02X ", b));
-                }
-                outputTextArea.setText(hexOutput.toString());
+                outputFileBytes = content;
+                isOutputBinary = true;
+                lastOutputFileName = file.getName();
+
+                outputTextArea.setText("[ZASZYFROWANY PLIK] " + file.getName() +
+                        "\nRozmiar: " + content.length + " bajtów" +
+                        "\nPróbka: " +
+                        Base64.getEncoder().encodeToString(
+                                Arrays.copyOf(content, Math.min(50, content.length))) + "...");
             } catch (IOException e) {
-                outputTextArea.setText("Błąd odczytu pliku: " + e.getMessage());
+                outputTextArea.setText("Błąd podczas wczytywania pliku: " + e.getMessage());
             }
         }
     }
@@ -179,15 +294,14 @@ public class MainController {
         File file = saveFile("Zapisz plik zaszyfrowany");
         if (file != null) {
             try {
-                String hexText = outputTextArea.getText().replaceAll("\\s+", "");
-                byte[] bytes = new byte[hexText.length() / 2];
-                for (int i = 0; i < bytes.length; i++) {
-                    int index = i * 2;
-                    bytes[i] = (byte) Integer.parseInt(hexText.substring(index, index + 2), 16);
+                if (outputFileBytes != null) {
+                    Files.write(file.toPath(), outputFileBytes);
+                    outputTextArea.setText("Plik zaszyfrowany został zapisany: " + file.getAbsolutePath());
+                } else {
+                    outputTextArea.setText("Brak danych do zapisania.");
                 }
-                Files.write(file.toPath(), bytes);
             } catch (IOException e) {
-                outputTextArea.setText("Błąd zapisu pliku: " + e.getMessage());
+                outputTextArea.setText("Błąd podczas zapisywania pliku: " + e.getMessage());
             }
         }
     }
