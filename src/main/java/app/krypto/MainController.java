@@ -18,11 +18,7 @@ import java.util.Base64;
 
 public class MainController {
     @FXML
-    private TextField keyValue1;
-    @FXML
-    private TextField keyValue2;
-    @FXML
-    private TextField keyValue3;
+    private TextField keyValueField;
     @FXML
     private Button generateKeys;
     @FXML
@@ -45,6 +41,12 @@ public class MainController {
     private RadioButton windowRadio;
     @FXML
     private RadioButton fileRadio;
+    @FXML
+    private RadioButton key128Radio;
+    @FXML
+    private RadioButton key192Radio;
+    @FXML
+    private RadioButton key256Radio;
 
     private KeyGenerator keyGenerator = new KeyGenerator();
     private AES aes = new AES();
@@ -62,30 +64,31 @@ public class MainController {
     @FXML
     public void initialize() {
         windowRadio.setSelected(true);
+        key128Radio.setSelected(true);
     }
 
     @FXML
     void generateKeysAction(ActionEvent event) {
-        byte[] key = keyGenerator.generateKey();
+        int keySize = 128;
+
+        if (key192Radio.isSelected()) {
+            keySize = 192;
+        } else if (key256Radio.isSelected()) {
+            keySize = 256;
+        }
+
+        byte[] key = keyGenerator.generateKey(keySize);
         expandedKey = keyGenerator.keyExpansion(key);
 
-        StringBuilder key1 = new StringBuilder();
-        StringBuilder key2 = new StringBuilder();
-        StringBuilder key3 = new StringBuilder();
+        int Nk = key.length / 4;
+        int rounds = keyGenerator.calculateRounds(Nk);
+        aes.setNumberOfRounds(rounds);
 
-        for (int i = 0; i < 5; i++) {
-            key1.append(String.format("%02X ", key[i]));
+        StringBuilder keyString = new StringBuilder();
+        for (int i = 0; i < key.length; i++) {
+            keyString.append(String.format("%02X ", key[i]));
         }
-        for (int i = 5; i < 10; i++) {
-            key2.append(String.format("%02X ", key[i]));
-        }
-        for (int i = 10; i < 16; i++) {
-            key3.append(String.format("%02X ", key[i]));
-        }
-
-        keyValue1.setText(key1.toString().trim());
-        keyValue2.setText(key2.toString().trim());
-        keyValue3.setText(key3.toString().trim());
+        keyValueField.setText(keyString.toString().trim());
     }
 
     @FXML
@@ -319,6 +322,6 @@ public class MainController {
     }
 
     private Stage getStage() {
-        return (Stage) keyValue1.getScene().getWindow();
+        return (Stage) keyValueField.getScene().getWindow();
     }
 }

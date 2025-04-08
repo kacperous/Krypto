@@ -16,33 +16,44 @@
     <children>
         <HBox alignment="CENTER" prefHeight="27.0" prefWidth="600.0" AnchorPane.bottomAnchor="373.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
-                <Label prefHeight="17.0" prefWidth="92.0" text="Wartość 1 klucza">
+                <Label prefHeight="17.0" prefWidth="92.0" text="Wartość klucza">
                     <HBox.margin>
                         <Insets right="80.0" />
                     </HBox.margin>
                 </Label>
-                <Label prefHeight="17.0" prefWidth="92.0" text="Wartość 2 klucza">
-                    <HBox.margin>
-                        <Insets right="80.0" />
-                    </HBox.margin>
-                </Label>
-                <Label prefHeight="17.0" prefWidth="92.0" text="Wartość 3 klucza" />
             </children>
         </HBox>
         <HBox alignment="CENTER" layoutY="27.0" prefHeight="35.0" prefWidth="600.0" AnchorPane.bottomAnchor="346.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="27.0">
             <children>
-                <TextField fx:id="keyValue1">
-                    <HBox.margin>
-                        <Insets right="30.0" />
-                    </HBox.margin>
-                </TextField>
-                <TextField fx:id="keyValue2">
-                    <HBox.margin>
-                        <Insets right="30.0" />
-                    </HBox.margin>
-                </TextField>
-                <TextField fx:id="keyValue3" />
+                <TextField fx:id="keyValueField" prefWidth="400.0" />
             </children>
+        </HBox>
+        <HBox alignment="CENTER" layoutY="90.0" prefHeight="27.0" prefWidth="600.0">
+            <children>
+                <Label text="Długość klucza:">
+                    <HBox.margin>
+                        <Insets right="10.0" />
+                    </HBox.margin>
+                </Label>
+                <RadioButton fx:id="key128Radio" mnemonicParsing="false" text="128 bitów" selected="true">
+                    <toggleGroup>
+                        <ToggleGroup fx:id="keySize" />
+                    </toggleGroup>
+                    <HBox.margin>
+                        <Insets right="10.0" />
+                    </HBox.margin>
+                </RadioButton>
+                <RadioButton fx:id="key192Radio" mnemonicParsing="false" text="192 bity" toggleGroup="$keySize">
+                    <HBox.margin>
+                        <Insets right="10.0" />
+                    </HBox.margin>
+                </RadioButton>
+                <RadioButton fx:id="key256Radio" mnemonicParsing="false" text="256 bitów" toggleGroup="$keySize">
+                </RadioButton>
+            </children>
+            <padding>
+                <Insets bottom="5.0" top="5.0" />
+            </padding>
         </HBox>
         <Button fx:id="generateKeys" layoutX="253.0" layoutY="66.0" mnemonicParsing="false" text="Generuj klucze" AnchorPane.bottomAnchor="309.0" AnchorPane.leftAnchor="253.0" AnchorPane.rightAnchor="253.0" AnchorPane.topAnchor="66.0" onAction="#generateKeysAction"/>
         <HBox layoutY="117.0" prefHeight="286.0" prefWidth="600.0">
@@ -103,7 +114,7 @@
                                 <ToggleGroup fx:id="radio" />
                             </toggleGroup>
                         </RadioButton>
-                        <RadioButton fx:id="fileRadio" mnemonicParsing="false" text="Plik" toggleGroup="$Radio" onAction="#radioModeAction">
+                        <RadioButton fx:id="fileRadio" mnemonicParsing="false" text="Plik" toggleGroup="$radio" onAction="#radioModeAction">
                             <VBox.margin>
                                 <Insets top="5.0" />
                             </VBox.margin>

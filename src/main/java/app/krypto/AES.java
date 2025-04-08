@@ -3,6 +3,12 @@ package app.krypto;
 import java.util.Arrays;
 
 public class AES {
+    private int Nr = 10;
+
+    public void setNumberOfRounds(int rounds){
+        this.Nr = rounds;
+    }
+
     public static int[] sbox = { 0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F,
             0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82,
             0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C,
@@ -71,10 +77,9 @@ public class AES {
         byte[] state = new byte[16];
         System.arraycopy(block, 0, state, 0, block.length); //kopiujemy bajty z input do stanu
 
-        int rounds = 10;
         addRoundKey(state, getRoundKey(extendedKey, 0));
 
-        for (int round = 1; round < rounds; round++) {
+        for (int round = 1; round < Nr; round++) {
             //substitucja bajtów
             substituteBytes(state);
             //przesunięcie wierszy
@@ -87,7 +92,7 @@ public class AES {
 
         substituteBytes(state);
         shiftRows(state);
-        addRoundKey(state, getRoundKey(extendedKey, rounds));
+        addRoundKey(state, getRoundKey(extendedKey, Nr));
 
         return state;
     }
@@ -110,13 +115,12 @@ public class AES {
         byte[] state = new byte[16];
         System.arraycopy(input, 0, state, 0, input.length); //kopiujemy bajty z input do stanu
 
-        int rounds = 10; //liczba rund
-        int round = rounds; //numer aktualnej rundy, rozpoczynamy od ostatniej rundy
+        int round = Nr; //numer aktualnej rundy, rozpoczynamy od ostatniej rundy
 
         //dodajemy klucz początkowy
         addRoundKey(state, getRoundKey(extendedKey, round));
 
-        for(round = rounds - 1; round > 0; round--){
+        for(round = Nr - 1; round > 0; round--){
             //przesunięcie wierszy
             reverseShiftRows(state);
             //substitucja bajtów

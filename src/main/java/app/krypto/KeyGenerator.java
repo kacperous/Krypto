@@ -5,17 +5,31 @@ import java.security.SecureRandom;
 public class KeyGenerator {
     private AES aes = new AES();
 
-    byte[] generateKey(){
-        byte[] key = new byte[16];
+    public byte[] generateKey(int keySize){
+        byte[] key = new byte[keySize / 8];
         SecureRandom random = new SecureRandom();
         random.nextBytes(key);
         return key;
     }
 
+    byte[] generateKey(){
+        return generateKey(128);
+    }
+
+    public int calculateRounds(int Nk) {
+        switch(Nk) {
+            case 4: return 10; // 128 bitów
+            case 6: return 12; // 192 bity
+            case 8: return 14; // 256 bitów
+            default: return 10; // Domyślnie 10 rund
+        }
+    }
+
     byte[] keyExpansion(byte[] key){
-        int Nk = 4; //liczba słów w kluczu głownym
+        int keyLength = key.length;
+        int Nk = keyLength / 4; //liczba słów w kluczu głownym
         int Nb = 4; //liczba kolumn macierzy stanu
-        int Nr = 10; //liczba rund
+        int Nr = calculateRounds(Nk); //liczba rund
         int expandedKeySize = Nb * (Nr + 1); //liczba słów w rozszerzonym kluczu
 
         byte[] expandedKey = new byte[expandedKeySize * 4]; //rozszerzony klucz
@@ -31,11 +45,14 @@ public class KeyGenerator {
             }
 
             if(i % Nk == 0){
-                temp = rotWord(temp); //rotacja słowa
-                temp = subWord(temp); //substytucja bajtów
+                temp = rotWord(temp); // Rotacja słowa
+                temp = subWord(temp); // Substytucja bajtów
                 if ((i / Nk) - 1 < rcon.length) {
                     temp[0] ^= rcon[(i / Nk) - 1]; // Użyj poprawnego indeksu z Rcon
                 }
+            } else if (Nk > 6 && i % Nk == 4) {
+                // Dodatkowy krok dla 256-bitowego klucza
+                temp = subWord(temp);
             }
 
             for(int j=0; j<4; j++){
