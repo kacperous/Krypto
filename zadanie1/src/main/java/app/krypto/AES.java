@@ -60,11 +60,10 @@ public class AES {
             0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D };
 
     public byte[] aesEncrypt(byte[] input, byte[] extendedKey){
-        int blockSize = 16; // Rozmiar bloku
+        int blockSize = 16;
         int inputLength = input.length;
         byte[] output = new byte[inputLength];
 
-        // Przetwarzamy każdy blok po kolei
         for (int offset = 0; offset < inputLength; offset += blockSize) {
             byte[] block = Arrays.copyOfRange(input, offset, Math.min(offset + blockSize, inputLength));
             byte[] encryptedBlock = encryptBlock(block, extendedKey);
@@ -75,18 +74,14 @@ public class AES {
 
     byte[] encryptBlock(byte[] block, byte[] extendedKey){
         byte[] state = new byte[16];
-        System.arraycopy(block, 0, state, 0, block.length); //kopiujemy bajty z input do stanu
+        System.arraycopy(block, 0, state, 0, block.length);
 
         addRoundKey(state, getRoundKey(extendedKey, 0));
 
         for (int round = 1; round < Nr; round++) {
-            //substitucja bajtów
             substituteBytes(state);
-            //przesunięcie wierszy
             shiftRows(state);
-            //mieszanie kolumn
             mixColumns(state);
-            //dodanie klucza rundy
             addRoundKey(state, getRoundKey(extendedKey, round));
         }
 
@@ -102,7 +97,6 @@ public class AES {
         int inputLength = input.length;
         byte[] output = new byte[inputLength];
 
-        // Przetwarzamy każdy blok po kolei
         for (int offset = 0; offset < inputLength; offset += blockSize) {
             byte[] block = Arrays.copyOfRange(input, offset, Math.min(offset + blockSize, inputLength));
             byte[] decryptedBlock = decryptBlock(block, extendedKey);
@@ -113,35 +107,29 @@ public class AES {
 
     byte[] decryptBlock(byte[] input, byte[] extendedKey){
         byte[] state = new byte[16];
-        System.arraycopy(input, 0, state, 0, input.length); //kopiujemy bajty z input do stanu
+        System.arraycopy(input, 0, state, 0, input.length);
 
-        int round = Nr; //numer aktualnej rundy, rozpoczynamy od ostatniej rundy
+        int round = Nr;
 
-        //dodajemy klucz początkowy
         addRoundKey(state, getRoundKey(extendedKey, round));
 
         for(round = Nr - 1; round > 0; round--){
-            //przesunięcie wierszy
             reverseShiftRows(state);
-            //substitucja bajtów
             reverseSubstituteBytes(state);
-            //dodanie klucza rundy
             addRoundKey(state, getRoundKey(extendedKey, round));
-            //mieszanie kolumn
             reverseMixColumns(state);
         }
 
-        //ostatnia runda
         reverseShiftRows(state);
         reverseSubstituteBytes(state);
         addRoundKey(state, getRoundKey(extendedKey,0));
 
-        return state; //zwracamy odszyfrowany stan
+        return state;
     }
 
     byte[] getRoundKey(byte[] extendedKey, int round){
         byte[] roundKey = new byte[16];
-        System.arraycopy(extendedKey, round * 16, roundKey, 0, 16); //kopiujemy bajty z rozszerzonego klucza do klucza rundy
+        System.arraycopy(extendedKey, round * 16, roundKey, 0, 16);
         return roundKey;
     }
 
@@ -173,43 +161,37 @@ public class AES {
         return state;
     }
 
-    byte multiply(byte a, byte b){ //funkcja pomocnicza do mixColumn działająca na ciele GF(2^8) czyli Galois-a
-        byte result = 0; //ustawiam wynik na 0 bo tak
-        for(int i=0; i<8; i++){ //iteruje po kazdej pozycji bajtu( bajt = 8 bitów)
-            if((b & 1) == 1){ //sprawdzamy czy najmniej znaczacy bit to 1, (najmniej znaczący to ostani)
-                result ^= a; //jezeli tak to dodajmy do wyniku (ale w ciele Galois-a dodanie to xor)
+    byte multiply(byte a, byte b){
+        byte result = 0;
+        for(int i=0; i<8; i++){
+            if((b & 1) == 1){
+                result ^= a;
             }
-            boolean mostSignificantBit = (a & 0x80) != 0; //sprawdzamy czy najbardziej znaczacy bit to 1
-            a <<= 1; //przesuwamy a w lewo o 1
+            boolean mostSignificantBit = (a & 0x80) != 0;
+            a <<= 1;
 
-            // ale jeśli MSB było 1, musimy "zredukować" wynik, bo w AES działamy modułem
-            // wielomianu 0x1B. To jakby "naprawianie" liczby, żeby była w poprawnym zakresie.
             if(mostSignificantBit){
-                a ^= 0x1B; // dodajemy wielomian 0x1B w procesie redukcji
+                a ^= 0x1B;
             }
-            b >>= 1; //przesuwamy b w prawo o 1 (pozbywamy sie juz przeanalizowanego ostatniego bitu)
+            b >>= 1;
         }
         return result;
     }
 
     byte[] mixColumns(byte[] state){
-        for(int i=0; i<4; i++){ //iterujemy przez 4 kolumny macierzy stanu
-            int base = i * 4; //obliczamy indeks pierwszego bajtu w danej kolumnie.
-            // dla pierwszej kolumny będzie to 0. Dla drugiej: 4. Trzeciej: 8. Czwartej: 12.
+        for(int i=0; i<4; i++){
+            int base = i * 4;
 
-            //bierzemy 4 bajty z kolumny
             byte c0 = state[base];
             byte c1 = state[base + 1];
             byte c2 = state[base + 2];
             byte c3 = state[base + 3];
 
-            //obliczamy nowe bajty w kolumnie, macierz jaka wybrliśmy to [02,03,01,01]
             byte n0 = (byte) (multiply((byte) 0x02, c0) ^ multiply((byte) 0x03, c1) ^ c2 ^ c3);
             byte n1 = (byte) (c0 ^ multiply((byte) 0x02, c1) ^ multiply((byte) 0x03, c2) ^ c3);
             byte n2 = (byte) (c0 ^ c1 ^ multiply((byte) 0x02, c2) ^ multiply((byte) 0x03, c3));
             byte n3 = (byte) (multiply((byte) 0x03, c0) ^ c1 ^ c2 ^ multiply((byte) 0x02, c3));
 
-            //zapisujemy nowe bajty w kolumnie
             state[base] = n0;
             state[base + 1] = n1;
             state[base + 2] = n2;

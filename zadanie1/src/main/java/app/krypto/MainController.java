@@ -53,7 +53,6 @@ public class MainController {
     private byte[] expandedKey;
     private boolean isFileMode = false;
 
-    // Zmienne do przechowywania danych binarnych
     private byte[] inputFileBytes = null;
     private byte[] outputFileBytes = null;
     private boolean isInputBinary = false;
@@ -100,26 +99,20 @@ public class MainController {
 
         byte[] dataToEncrypt;
 
-        // Sprawdź czy pracujemy z danymi binarnymi
         if (isInputBinary && inputFileBytes != null) {
             dataToEncrypt = inputFileBytes;
         } else {
-            // Pobierz tekst z pola tekstowego
             String inputText = inputTextArea.getText();
             dataToEncrypt = inputText.getBytes(StandardCharsets.UTF_8);
         }
 
-        // Przygotuj dane do szyfrowania (dodaj padding)
         byte[] paddedData = Utils.padBlock(dataToEncrypt);
 
-        // Zaszyfruj dane
         byte[] encryptedBytes = aes.aesEncrypt(paddedData, expandedKey);
 
-        // Zachowaj zaszyfrowane dane do późniejszego zapisu
         outputFileBytes = encryptedBytes;
         isOutputBinary = true;
 
-        // Zachowaj informację o nazwie pliku
         lastOutputFileName = lastInputFileName;
 
         StringBuilder hexOutput = new StringBuilder();
@@ -138,11 +131,9 @@ public class MainController {
 
         byte[] dataToDecrypt;
 
-        // Sprawdź czy mamy dane binarne do odszyfrowania
         if (isOutputBinary && outputFileBytes != null) {
             dataToDecrypt = outputFileBytes;
         } else {
-            // Próbuj przekonwertować hex na bajty
             String hexText = outputTextArea.getText().replaceAll("\\s+", "");
             if (hexText.startsWith("[ZASZYFROWANY") || hexText.startsWith("[ZASZYFROWANE")) {
                 inputTextArea.setText("Użyj przycisku 'Otwórz' aby wczytać plik zaszyfrowany");
@@ -161,29 +152,23 @@ public class MainController {
             }
         }
 
-        // Odszyfruj dane
         byte[] decryptedData = aes.aesDecrypt(dataToDecrypt, expandedKey);
 
         try {
-            // Usuń padding
             byte[] unpaddedData = Utils.removePadding(decryptedData);
 
-            // Sprawdź czy dane są binarne
             boolean looksLikeBinary = isBinaryContent(unpaddedData);
 
-            // Zachowaj odszyfrowane dane
             inputFileBytes = unpaddedData;
             isInputBinary = looksLikeBinary;
             lastInputFileName = lastOutputFileName;
 
             if (looksLikeBinary) {
-                // Pokaż informację o pliku binarnym
                 inputTextArea.setText("[ODSZYFROWANY PLIK BINARNY]" +
                         (lastOutputFileName.isEmpty() ? "" : " - " + lastOutputFileName) +
                         "\nRozmiar: " + unpaddedData.length + " bajtów" +
                         "\nUżyj przycisku 'Zapisz' aby zapisać plik.");
             } else {
-                // Pokaż jako tekst jeśli nie wygląda na binarne dane
                 String decryptedText = new String(unpaddedData, StandardCharsets.UTF_8);
                 inputTextArea.setText(decryptedText);
                 isInputBinary = false;
@@ -193,15 +178,12 @@ public class MainController {
         }
     }
 
-    // Pomocnicza metoda do wykrywania zawartości binarnej
     private boolean isBinaryContent(byte[] data) {
-        // Zakładamy, że pliki PDF zawsze zaczynają się od %PDF
         if (data.length >= 4 &&
                 data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F') {
             return true;
         }
 
-        // Sprawdzamy czy dane wyglądają na binarne
         int binaryCount = 0;
         int sampleSize = Math.min(100, data.length);
 
@@ -227,18 +209,15 @@ public class MainController {
             try {
                 byte[] content = Files.readAllBytes(file.toPath());
 
-                // Sprawdź czy zawartość wygląda na binarną
                 isInputBinary = isBinaryContent(content);
                 inputFileBytes = content;
                 lastInputFileName = file.getName();
 
                 if (isInputBinary) {
-                    // Pokaż informację o pliku binarnym
                     inputTextArea.setText("[PLIK BINARNY] " + file.getName() +
                             "\nRozmiar: " + content.length + " bajtów" +
                             "\nPlik zostanie zaszyfrowany jako dane binarne.");
                 } else {
-                    // Pokaż jako tekst, jeśli nie jest binarny
                     String text = new String(content, StandardCharsets.UTF_8);
                     inputTextArea.setText(text);
                 }
@@ -256,10 +235,8 @@ public class MainController {
                 byte[] dataToSave;
 
                 if (isInputBinary && inputFileBytes != null) {
-                    // Zapisz dane binarne bez modyfikacji
                     dataToSave = inputFileBytes;
                 } else {
-                    // Zapisz tekst
                     dataToSave = inputTextArea.getText().getBytes(StandardCharsets.UTF_8);
                 }
 

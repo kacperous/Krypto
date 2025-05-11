@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<?import javafx.collections.FXCollections?>
+<?import java.lang.Integer?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.Controller" prefWidth="720" prefHeight="550">
+
+    <!-- Przyciski do obsługi kluczy -->
+    <VBox spacing="10.0" AnchorPane.leftAnchor="20" AnchorPane.topAnchor="20" AnchorPane.rightAnchor="20" AnchorPane.bottomAnchor="20">
+        <HBox spacing="10">
+            <Button text="Generuj Klucze RSA" onAction="#onGenKeys"/>
+            <Label text="Długość klucza:"/>
+            <ComboBox fx:id="keySizeBox" prefWidth="100">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <Integer fx:value="1024"/>
+                        <Integer fx:value="2048"/>
+                        <Integer fx:value="4096"/>
+                    </FXCollections>
+                </items>
+            </ComboBox>
+            <Button text="Wczytaj Klucz Prywatny" onAction="#onLoadPrivateKey"/>
+            <Button text="Wczytaj Klucz Publiczny" onAction="#onLoadPublicKey"/>
+        </HBox>
+
+        <!-- INFO O KLUCZACH -->
+        <HBox spacing="10">
+            <Label text="Ścieżka klucza prywatnego:"/>
+            <TextField fx:id="privateKeyPathField" prefWidth="350" editable="false"/>
+            <Label text="publicznego:"/>
+            <TextField fx:id="publicKeyPathField" prefWidth="350" editable="false"/>
+        </HBox>
+
+        <Separator/>
+
+        <!-- SEKCJA DO TEKSTU -->
+        <HBox spacing="10">
+            <VBox spacing="5">
+                <Label text="Tekst Jawny:"/>
+                <TextArea fx:id="plainTextArea" prefRowCount="6" prefWidth="300"/>
+            </VBox>
+            <VBox spacing="5">
+                <Label text="Tekst Szyfrowany (Base64):"/>
+                <TextArea fx:id="encryptedTextArea" prefRowCount="6" prefWidth="300"/>
+            </VBox>
+            <VBox spacing="5">
+                <Label text="Tekst Odszyfrowany:"/>
+                <TextArea fx:id="decryptedTextArea" editable="false" prefRowCount="6" prefWidth="300"/>
+            </VBox>
+        </HBox>
+        <HBox spacing="10">
+            <Button text="Szyfruj tekst" onAction="#onEncryptText"/>
+            <Button text="Deszyfruj tekst" onAction="#onDecryptText"/>
+        </HBox>
+
+        <Separator/>
+
+        <!-- SEKCJA DO PLIKÓW -->
+        <HBox spacing="10">
+            <Label text="Plik do zaszyfrowania:"/>
+            <TextField fx:id="inputFileField" prefWidth="290"/>
+            <Button text="Wybierz..." onAction="#onChooseInputFile"/>
+            <Button text="Szyfruj plik" onAction="#onEncryptFile"/>
+        </HBox>
+        <HBox spacing="10">
+            <Label text="Plik do deszyfrowania:"/>
+            <TextField fx:id="encryptedFileField" prefWidth="290"/>
+            <Button text="Wybierz..." onAction="#onChooseEncryptedFile"/>
+            <Button text="Deszyfruj plik" onAction="#onDecryptFile"/>
+        </HBox>
+
+        <Separator/>
+
+        <!-- KOMUNIKATY I STATUS -->
+        <Label fx:id="statusLabel" style="-fx-text-fill: green"/>
+    </VBox>
+</AnchorPane>
